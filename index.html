@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pick Our Plans</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
+
+<script>
+/* =====================================================================
+   JACK'S SETTINGS  (edit this block, save, re-upload. That's it.)
+   ---------------------------------------------------------------------
+   Easiest way to set busy times: open your site with #admin at the end
+   (e.g. https://your-site.vercel.app/#admin), enter your ADMIN_KEY, tap
+   the slots you're busy and press "Save busy times". No re-deploy needed.
+   The UNAVAILABLE block below is only used until you save from #admin.
+   ===================================================================== */
+const CONFIG = {
+  myName: "Nelvin",
+  herName: "",                 // optional, e.g. "Mei". Leave "" for a generic hello
+  firstDay: "2026-11-19",
+  lastDay:  "2026-11-27",
+};
+/* Time of day options she can pick from (you'll text her exact timings). */
+const PERIODS = [
+  { id: "morning",   label: "Morning",   ico: "🌤️" },
+  { id: "afternoon", label: "Afternoon", ico: "☀️" },
+  { id: "night",     label: "Night",     ico: "🌙" },
+];
+
+/* Times you're NOT free (used until you save from #admin).
+   Format: "YYYY-MM-DD": ["morning", "afternoon", "night"]  or  "all" for the whole day. */
+const UNAVAILABLE = {
+  "2026-11-21": ["morning"],
+  "2026-11-24": ["morning"],
+  "2026-11-27": ["morning"],
+};
+</script>
+
+<style>
+/* Layout: one centred card that steps through questions like a little booklet; progress hearts on top. */
+:root {
+  --bg: #fdf3f5;
+  --bg-2: #f9e2e8;
+  --card: #ffffff;
+  --ink: #3a2530;
+  --ink-soft: #7d6470;
+  --line: #f0d3dc;
+  --accent: #e2557a;
+  --accent-ink: #ffffff;
+  --accent-soft: #fde1e9;
+  --mint: #3fa98c;
+  --mint-soft: #dff3ec;
+  --busy: #ece4e7;
+  --busy-ink: #a7969d;
+  --shadow: 0 18px 50px -20px rgba(160, 60, 90, .35);
+  --f-display: "Fredoka", "Nunito", system-ui, sans-serif;
+  --f-body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --r: 18px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1d1418; --bg-2: #2a1b22; --card: #281c22; --ink: #f6e9ee; --ink-soft: #c3a9b4;
+    --line: #42303a; --accent: #ff7c9c; --accent-ink: #2a1019; --accent-soft: #4a2432;
+    --mint: #6fd3b4; --mint-soft: #1f3a33; --busy: #342830; --busy-ink: #8a7580;
+    --shadow: 0 18px 50px -20px rgba(0,0,0,.6); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1d1418; --bg-2: #2a1b22; --card: #281c22; --ink: #f6e9ee; --ink-soft: #c3a9b4;
+  --line: #42303a; --accent: #ff7c9c; --accent-ink: #2a1019; --accent-soft: #4a2432;
+  --mint: #6fd3b4; --mint-soft: #1f3a33; --busy: #342830; --busy-ink: #8a7580;
+  --shadow: 0 18px 50px -20px rgba(0,0,0,.6); color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; min-height: 100vh;
+  background: radial-gradient(1200px 600px at 10% -10%, var(--bg-2), transparent 60%), var(--bg);
+  color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 48px;
+}
+.wrap { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+h1, h2 { font-family: var(--f-display); font-weight: 600; text-wrap: balance; margin: 0; letter-spacing: -.01em; }
+h1 { font-size: clamp(2rem, 7vw, 2.8rem); line-height: 1.1; }
+h2 { font-size: 1.55rem; line-height: 1.2; }
+p { margin: 0; }
+.muted { color: var(--ink-soft); }
+.eyebrow { font-size: .78rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+
+/* progress */
+.progress { display: flex; gap: 8px; justify-content: center; }
+.progress span { width: 28px; height: 8px; border-radius: 99px; background: var(--line); transition: background .3s, width .3s; }
+.progress span.on { background: var(--accent); width: 40px; }
+.progress span.done { background: var(--accent); opacity: .45; }
+
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 26px; box-shadow: var(--shadow); padding: clamp(22px, 5vw, 36px); display: flex; flex-direction: column; gap: 20px; }
+.step-head { display: flex; flex-direction: column; gap: 6px; }
+
+/* choice tiles */
+.tiles { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.tile { position: relative; display: flex; flex-direction: column; gap: 4px; padding: 16px; border-radius: var(--r); border: 2px solid var(--line); background: var(--card); cursor: pointer; transition: transform .15s, border-color .15s, background .15s; text-align: left; font: inherit; color: inherit; }
+.tile:hover { transform: translateY(-2px); border-color: var(--accent); }
+.tile input { position: absolute; opacity: 0; pointer-events: none; }
+.tile .ico { font-size: 1.8rem; line-height: 1; }
+.tile b { font-family: var(--f-display); font-weight: 600; font-size: 1.12rem; }
+.tile small { color: var(--ink-soft); font-size: .86rem; line-height: 1.35; }
+.tile .tick { position: absolute; top: 12px; right: 12px; width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; font-size: .8rem; color: transparent; transition: all .15s; }
+.tile:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.tile:has(input:checked) .tick { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.tile:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+.tiles.big .tile { padding: 22px 18px; }
+.tiles.big .tile .ico { font-size: 2.4rem; }
+.group-label { font-size: .8rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); margin-top: 4px; }
+
+/* calendar */
+.days { display: grid; grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); gap: 8px; }
+.day { font: inherit; color: inherit; border: 2px solid var(--line); background: var(--card); border-radius: 14px; padding: 8px 4px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 0; transition: all .15s; }
+.day .dow { font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
+.day .num { font-family: var(--f-display); font-size: 1.5rem; font-weight: 600; line-height: 1.2; }
+.day .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--mint); margin-top: 2px; }
+.day.partly .dot { background: linear-gradient(90deg, var(--mint) 50%, var(--busy-ink) 50%); }
+.day.full { background: var(--busy); color: var(--busy-ink); cursor: not-allowed; }
+.day.full .dot { background: var(--busy-ink); }
+.day.full .num { text-decoration: line-through; }
+.day:not(.full):hover { border-color: var(--accent); }
+.day.sel { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
+.day.sel .dow { color: var(--accent-ink); opacity: .85; }
+.day:focus-visible, .slot:focus-visible, .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: .84rem; color: var(--ink-soft); }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 4px; vertical-align: -1px; margin-right: 6px; }
+
+.slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 6px; }
+.slot { font: inherit; font-size: .88rem; font-weight: 700; font-variant-numeric: tabular-nums; color: inherit; padding: 9px 4px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--card); cursor: pointer; transition: background .12s, border-color .12s; }
+.slot:hover:not(:disabled) { border-color: var(--accent); }
+.slot:disabled .p-ico { opacity: .45; }
+.slot:disabled { background: repeating-linear-gradient(135deg, var(--busy), var(--busy) 6px, transparent 6px, transparent 11px), var(--busy); color: var(--busy-ink); border-color: transparent; cursor: not-allowed; text-decoration: line-through; }
+.slot.in { background: var(--accent-soft); border-color: var(--accent); }
+.slot.edge { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.slot.hint:not(:disabled):not(.in):not(.edge) { border-style: dashed; border-color: var(--mint); }
+.slots.periods { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.slots.periods .slot { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px 6px; font-size: 1rem; border-radius: 16px; }
+.slots.periods .slot small { font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.p-ico { font-size: 1.6rem; line-height: 1; }
+.pick-readout { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 14px; border-radius: 14px; background: var(--mint-soft); font-weight: 700; }
+.pick-readout.empty { background: var(--bg); color: var(--ink-soft); font-weight: 600; }
+
+/* admin */
+.admin .slot.busy-on { background: var(--ink); color: var(--card); border-color: var(--ink); text-decoration: line-through; }
+.admin-bar { display: flex; flex-wrap: wrap; gap: 8px; }
+textarea, .field { width: 100%; font: inherit; color: inherit; background: var(--bg); border: 1.5px solid var(--line); border-radius: 14px; padding: 12px 14px; resize: vertical; }
+textarea:focus, .field:focus { outline: 2px solid var(--accent); border-color: transparent; }
+pre.code { margin: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 14px; padding: 14px; font-size: .82rem; overflow-x: auto; white-space: pre; }
+
+/* buttons */
+.nav { display: flex; gap: 10px; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+.btn { font: inherit; font-weight: 800; font-size: 1rem; border-radius: 99px; padding: 13px 24px; border: 2px solid transparent; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: transform .12s, opacity .12s; }
+.btn:active { transform: scale(.97); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn.primary:disabled { opacity: .4; cursor: not-allowed; }
+.btn.ghost { background: transparent; color: var(--ink-soft); border-color: var(--line); }
+.btn.mint { background: var(--mint); color: var(--card); }
+.btn.small { padding: 8px 14px; font-size: .88rem; }
+.send-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.send-row .btn { flex: 1 1 180px; }
+
+.summary { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.summary div { display: grid; grid-template-columns: 110px 1fr; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.summary div:last-child { border-bottom: 0; }
+.summary dt { font-size: .78rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); padding-top: 2px; }
+.summary dd { margin: 0; font-weight: 700; min-width: 0; }
+.toast { min-height: 1.4em; font-size: .9rem; color: var(--mint); font-weight: 700; }
+
+.hero-cake { font-size: 3.2rem; line-height: 1; display: flex; gap: 8px; }
+.hero-cake span { display: inline-block; animation: bob 2.6s ease-in-out infinite; }
+.hero-cake span:nth-child(2) { animation-delay: .3s; } .hero-cake span:nth-child(3) { animation-delay: .6s; }
+@keyframes bob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
+.fade { animation: fade .35s ease both; }
+@keyframes fade { from { opacity: .3; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .hero-cake span, .fade { animation: none; } .tile, .btn { transition: none; } }
+footer { text-align: center; font-size: .82rem; color: var(--ink-soft); }
+@media (max-width: 420px) { .summary div { grid-template-columns: 1fr; gap: 2px; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="progress" id="progress" aria-hidden="true"></div>
+  <main class="card" id="app" aria-live="polite"></main>
+  <footer id="foot">made with too &ldquo;little&rdquo; thoughts by <span id="fromName"></span></footer>
+</div>
+
+<script>
+/* ---------- helpers ---------- */
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const toMin = t => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+const fmt = m => { const h = Math.floor(m / 60) % 24, mm = m % 60, ap = h >= 12 ? "pm" : "am", h12 = ((h + 11) % 12) + 1; return mm ? `${h12}:${String(mm).padStart(2, "0")}${ap}` : `${h12}${ap}`; };
+const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+function dayList() {
+  const out = []; const [y, m, d] = CONFIG.firstDay.split("-").map(Number);
+  let t = Date.UTC(y, m - 1, d); const end = Date.UTC(...CONFIG.lastDay.split("-").map((v, i) => i === 1 ? v - 1 : +v));
+  while (t <= end) { const dt = new Date(t); out.push({ iso: dt.toISOString().slice(0, 10), dow: DOW[dt.getUTCDay()], num: dt.getUTCDate(), mon: MON[dt.getUTCMonth()] }); t += 864e5; }
+  return out;
+}
+const DAYS = dayList();
+const NSLOTS = PERIODS.length;
+function busyMask(iso, table = UNAVAILABLE) {
+  const v = table[iso];
+  return PERIODS.map(p => v === "all" || (Array.isArray(v) && v.includes(p.id)));
+}
+const periodText = ids => PERIODS.filter(p => ids.includes(p.id)).map(p => p.label).join(" or ");
+const dayLabel = d => `${d.dow} ${d.num} ${d.mon}`;
+
+/* ---------- state ---------- */
+const state = { step: 0, meal: "", acts: [], other: "", day: "", periods: [], note: "" };
+
+/* ---------- activities (edit freely) ---------- */
+const ACTIVITY_GROUPS = [
+  { label: "Pick any", items: [
+    { id: "cafe", ico: "🍰", name: "Cafe hopping", desc: "" },
+    { id: "amusement", ico: "🎢", name: "Amusement parks", desc: "" },
+    { id: "arcade", ico: "🎳", name: "Bowling or arcade", desc: "" },
+  ]},
+  { label: "Or", items: [
+    { id: "surprise", ico: "🎁", name: "Surprise me!", desc: "Anything" },
+  ]},
+];
+const ACT_BY_ID = Object.fromEntries(ACTIVITY_GROUPS.flatMap(g => g.items).map(a => [a.id, a]));
+
+/* =====================================================================
+   STEPS. Each step is one screen. To add a new question, add an object
+   with: render(el), valid(), and summary() -> [label, text].
+   ===================================================================== */
+const STEPS = [
+  {
+    id: "acts", title: "What would you prefer to do?", eyebrow: "Tick everything you're okay with",
+    render(el) {
+      el.innerHTML = head(this) + ACTIVITY_GROUPS.map(g => `
+        <div class="group-label">${g.label}</div>
+        <div class="tiles">${g.items.map(a => tile("checkbox", "act", a.id, a.ico, a.name, a.desc, state.acts.includes(a.id))).join("")}</div>`).join("") + `
+        <label class="group-label" for="other">Anything else you'd like? (optional)</label>
+        <input class="field" id="other" maxlength="140" value="${esc(state.other)}">`;
+      el.querySelectorAll("input[name=act]").forEach(i => i.onchange = () => {
+        state.acts = [...el.querySelectorAll("input[name=act]:checked")].map(x => x.value); refreshNav();
+      });
+      $("#other", el).oninput = e => { state.other = e.target.value; refreshNav(); };
+    },
+    valid: () => state.acts.length > 0 || state.other.trim().length > 0,
+    summary: () => ["Activities", [...state.acts.map(id => ACT_BY_ID[id].ico + " " + ACT_BY_ID[id].name), state.other.trim() && "✏️ " + state.other.trim()].filter(Boolean).join(", ")],
+  },
+  {
+    id: "when", title: "When works for you?", eyebrow: "Pick a day, then the time of day",
+    render(el) { renderCalendar(el, this); },
+    valid: () => state.day && state.periods.length > 0,
+    summary: () => { const d = DAYS.find(x => x.iso === state.day); return ["When", `📅 ${dayLabel(d)}, ${periodText(state.periods)}`]; },
+  },
+  /* ---- add new steps here (e.g. "Any food you don't eat?") ---- */
+  {
+    id: "send", title: "All set! Send it over", eyebrow: "Last step", isFinal: true,
+    render(el) {
+      const rows = STEPS.filter(s => s.summary && !s.isFinal).map(s => s.summary());
+      el.innerHTML = head(this) + `
+        <dl class="summary">${rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>
+        <label class="group-label" for="note">A note for ${esc(CONFIG.myName)} (optional)</label>
+        <textarea id="note" rows="2" maxlength="300" placeholder="e.g. I'm free a bit later too, or no spicy food pls">${esc(state.note)}</textarea>
+        <div class="send-row">
+          <button class="btn primary" id="send">Send to ${esc(CONFIG.myName)}</button>
+        </div>
+        <div class="toast" id="toast" role="status"></div>
+        <div id="fallback" hidden>
+          <p class="muted">Couldn't send it just now. Copy this and text it to ${esc(CONFIG.myName)} instead:</p>
+          <div class="send-row"><button class="btn ghost" id="copy">Copy message</button></div>
+          <pre class="code" id="msgPreview" style="white-space:pre-wrap"></pre>
+        </div>`;
+      $("#note", el).oninput = e => { state.note = e.target.value; };
+      $("#copy", el).onclick = () => copyText(buildMessage(), "Copied! Paste it into any chat with " + CONFIG.myName + ".");
+      $("#send", el).onclick = async () => {
+        const btn = $("#send", el); btn.disabled = true; btn.textContent = "Sending…";
+        try {
+          const r = await fetch("api/respond", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(buildPayload()) });
+          const j = await r.json();
+          if (!j.ok) throw new Error(j.error);
+          showThanks();
+        } catch (e) {
+          btn.disabled = false; btn.textContent = `Try again`;
+          $("#msgPreview", el).textContent = buildMessage();
+          $("#fallback", el).hidden = false;
+        }
+      };
+    },
+    valid: () => true,
+  },
+];
+
+function buildMessage() {
+  const lines = [`Hi ${CONFIG.myName}! Here's what I picked`, ""];
+  STEPS.filter(s => s.summary && !s.isFinal).forEach(s => { const [k, v] = s.summary(); lines.push(`${k}: ${v}`); });
+  if (state.note.trim()) lines.push("", `Note: ${state.note.trim()}`);
+  return lines.join("\n");
+}
+
+function buildPayload() {
+  const d = DAYS.find(x => x.iso === state.day);
+  return {
+    activities: state.acts.map(id => ACT_BY_ID[id].name),
+    otherIdea: state.other.trim(),
+    date: state.day,
+    dateLabel: dayLabel(d),
+    timeOfDay: PERIODS.filter(p => state.periods.includes(p.id)).map(p => p.label),
+    note: state.note.trim(),
+    summary: buildMessage(),
+  };
+}
+const hhmm = m => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+
+function showThanks() {
+  $("#progress").innerHTML = STEPS.map(() => `<span class="done"></span>`).join("");
+  $("#app").innerHTML = `<div class="fade" style="display:flex;flex-direction:column;gap:18px">
+    <div class="hero-cake" aria-hidden="true"><span>🎉</span><span>🍰</span><span>☕</span></div>
+    <div class="step-head"><span class="eyebrow">Booking confirmed</span><h1>You're booked in!</h1></div>
+    <p class="muted">${esc(CONFIG.myName)} has your booking and will sort out the rest. See you soon.</p></div>`;
+}
+
+function copyText(text, okMsg) {
+  const toast = $("#toast");
+  const fallback = () => { const p = $("#msgPreview"); if (p) { p.closest("details").open = true; const r = document.createRange(); r.selectNodeContents(p); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } toast.textContent = "Select the message below and copy it."; };
+  try { navigator.clipboard.writeText(text).then(() => toast.textContent = okMsg, fallback); } catch (e) { fallback(); }
+}
+
+/* ---------- building blocks ---------- */
+function head(s) { return `<div class="step-head"><span class="eyebrow">${s.eyebrow || ""}</span><h2>${s.title}</h2>${s.sub ? `<p class="muted">${s.sub}</p>` : ""}</div>`; }
+function tile(type, name, value, ico, title, desc, checked) {
+  return `<label class="tile"><input type="${type}" name="${name}" value="${value}" id="${name}-${value}" ${checked ? "checked" : ""}>
+    <span class="tick">✓</span><span class="ico" aria-hidden="true">${ico}</span><b>${title}</b>${desc ? `<small>${desc}</small>` : ""}</label>`;
+}
+
+function renderCalendar(el, step) {
+  const hintRange = null;
+  el.innerHTML = head(step) + `
+    <div class="days" role="listbox" aria-label="Day">${DAYS.map(d => {
+      const m = busyMask(d.iso), n = m.filter(Boolean).length;
+      const cls = n === NSLOTS ? "full" : n ? "partly" : "";
+      return `<button class="day ${cls} ${state.day === d.iso ? "sel" : ""}" data-iso="${d.iso}" ${cls === "full" ? "disabled aria-disabled=true" : ""} aria-label="${dayLabel(d)}${cls === "full" ? ", busy" : ""}">
+        <span class="dow">${d.dow}</span><span class="num">${d.num}</span><span class="dot"></span></button>`;
+    }).join("")}</div>
+    <div class="legend"><span><i style="background:var(--mint)"></i>${CONFIG.myName}'s free</span><span><i style="background:linear-gradient(90deg,var(--mint) 50%,var(--busy-ink) 50%)"></i>Partly busy</span><span><i style="background:var(--busy-ink)"></i>Busy all day</span></div>
+    <div id="slotArea"></div>`;
+  el.querySelectorAll(".day:not(:disabled)").forEach(b => b.onclick = () => {
+    if (state.day !== b.dataset.iso) { state.day = b.dataset.iso; state.periods = []; }
+    renderCalendar(el, step); refreshNav();
+  });
+  const area = $("#slotArea", el);
+  if (!state.day) { area.innerHTML = `<div class="pick-readout empty">👆 Pick a day first</div>`; return; }
+  const mask = busyMask(state.day);
+  area.innerHTML = `
+    <div class="group-label">${dayLabel(DAYS.find(d => d.iso === state.day))} · tap all that work</div>
+    <div class="slots periods">${PERIODS.map((p, i) => {
+      const on = state.periods.includes(p.id), busy = mask[i];
+      return `<button class="slot ${on ? "edge" : ""}" data-id="${p.id}" ${busy ? "disabled" : ""} aria-pressed="${on}" aria-label="${p.label}${busy ? ", busy" : ""}"><span class="p-ico" aria-hidden="true">${p.ico}</span>${p.label}${busy ? `<small>busy</small>` : ""}</button>`;
+    }).join("")}</div>
+    ${state.periods.length ? `<div class="pick-readout">⏰ ${periodText(state.periods)}</div>` : `<div class="pick-readout empty">Time will be confirmed.</div>`}`;
+  area.querySelectorAll(".slot:not(:disabled)").forEach(b => b.onclick = () => {
+    const id = b.dataset.id;
+    state.periods = state.periods.includes(id) ? state.periods.filter(x => x !== id) : [...state.periods, id];
+    renderCalendar(el, step); refreshNav();
+  });
+}
+
+/* ---------- shell ---------- */
+function refreshNav() { const n = $("#next"); if (n) n.disabled = !STEPS[state.step].valid(); }
+function go(i) {
+  state.step = Math.max(0, Math.min(STEPS.length - 1, i));
+  const s = STEPS[state.step], app = $("#app");
+  const body = document.createElement("div"); body.className = "fade"; body.style.cssText = "display:flex;flex-direction:column;gap:20px";
+  s.render.call(s, body);
+  app.replaceChildren(body);
+  const nav = document.createElement("div"); nav.className = "nav";
+  nav.innerHTML = `${state.step > 0 ? `<button class="btn ghost" id="back">← Back</button>` : "<span></span>"}
+    ${!s.isFinal ? `<button class="btn primary" id="next">${s.next || "Next →"}</button>` : ""}`;
+  app.append(nav);
+  $("#back") && ($("#back").onclick = () => go(state.step - 1));
+  $("#next") && ($("#next").onclick = () => s.valid() && go(state.step + 1));
+  refreshNav();
+  $("#progress").innerHTML = STEPS.map((_, i) => `<span class="${i === state.step ? "on" : i < state.step ? "done" : ""}"></span>`).join("");
+  if (state.step) app.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+/* ---------- admin mode (#admin) for Nelvin ---------- */
+function getKey() { try { return localStorage.getItem("date-admin-key") || ""; } catch (e) { return ""; } }
+function setKey(k) { try { localStorage.setItem("date-admin-key", k); } catch (e) {} }
+
+function admin() {
+  let cur = DAYS[0].iso, key = getKey(), responses = null, respErr = "";
+  const masks = Object.fromEntries(DAYS.map(d => [d.iso, busyMask(d.iso)]));
+  const toTable = () => {
+    const t = {};
+    for (const d of DAYS) {
+      const m = masks[d.iso]; if (!m.some(Boolean)) continue;
+      if (m.every(Boolean)) { t[d.iso] = "all"; continue; }
+      const r = PERIODS.filter((p, i) => m[i]).map(p => p.id);
+      t[d.iso] = r;
+    }
+    return t;
+  };
+  const app = $("#app"); app.classList.add("admin");
+  $("#progress").innerHTML = "";
+
+  async function loadResponses() {
+    respErr = ""; responses = null;
+    try {
+      const r = await fetch(`api/responses?key=${encodeURIComponent(key)}`);
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || r.status);
+      responses = j;
+    } catch (e) { respErr = "Couldn't load responses: " + e.message; }
+    draw();
+  }
+
+  function draw() {
+    const m = masks[cur];
+    app.innerHTML = `
+      <div class="step-head"><span class="eyebrow">Only for ${esc(CONFIG.myName)}</span><h2>Your planner</h2>
+      <p class="muted">She never sees this page. It only opens when the link ends in #admin, and saving needs your key.</p></div>
+      <label class="group-label" for="key">Admin key (the ADMIN_KEY you set on Vercel)</label>
+      <input class="field" id="key" type="password" value="${esc(key)}" placeholder="your secret key">
+
+      <h2 style="font-size:1.25rem">Her responses</h2>
+      <div id="resp">${respErr ? `<div class="pick-readout empty">${esc(respErr)}</div>` : responses === null ? `<div class="pick-readout empty">Enter your key, then load.</div>` :
+        responses.length === 0 ? `<div class="pick-readout empty">No response yet. Fingers crossed.</div>` :
+        responses.map(r => `<dl class="summary">
+          <div><dt>Sent</dt><dd>${esc(new Date(r.receivedAt).toLocaleString("en-SG", { timeZone: "Asia/Singapore" }))}</dd></div>
+          <div><dt>Activities</dt><dd>${esc((r.activities || []).join(", "))}${r.otherIdea ? " + " + esc(r.otherIdea) : ""}</dd></div>
+          <div><dt>When</dt><dd>${esc(r.dateLabel)}, ${esc((r.timeOfDay || []).join(" or "))}</dd></div>
+          ${r.note ? `<div><dt>Note</dt><dd>${esc(r.note)}</dd></div>` : ""}</dl>`).join("")}</div>
+      <div class="admin-bar"><button class="btn primary small" id="load">Load responses</button>
+        <a class="btn ghost small" id="raw" target="_blank" rel="noopener" href="api/responses?key=${encodeURIComponent(key)}">Open raw JSON</a></div>
+
+      <h2 style="font-size:1.25rem">When you're busy</h2>
+      <p class="muted">Tap a time of day to mark it busy (dark), then save. She sees these as striped.</p>
+      <div class="days">${DAYS.map(d => { const n = masks[d.iso].filter(Boolean).length; return `<button class="day ${d.iso === cur ? "sel" : ""}" data-iso="${d.iso}"><span class="dow">${d.dow}</span><span class="num">${d.num}</span><span class="dot" style="${n ? "background:var(--busy-ink)" : ""}"></span></button>`; }).join("")}</div>
+      <div class="admin-bar"><button class="btn ghost small" id="allBusy">Busy all day</button><button class="btn ghost small" id="allFree">Free all day</button></div>
+      <div class="slots periods">${m.map((b, i) => `<button class="slot ${b ? "busy-on" : ""}" data-i="${i}"><span class="p-ico" aria-hidden="true">${PERIODS[i].ico}</span>${PERIODS[i].label}</button>`).join("")}</div>
+      <div class="admin-bar"><button class="btn primary" id="save">Save busy times</button><a class="btn ghost" href="#" id="exit">Preview what she sees →</a></div>
+      <div class="toast" id="toast" role="status"></div>`;
+    $("#key").oninput = e => { key = e.target.value.trim(); setKey(key); $("#raw").href = `api/responses?key=${encodeURIComponent(key)}`; };
+    $("#load").onclick = loadResponses;
+    app.querySelectorAll(".day").forEach(b => b.onclick = () => { cur = b.dataset.iso; draw(); });
+    app.querySelectorAll(".slot").forEach(b => b.onclick = () => { m[+b.dataset.i] = !m[+b.dataset.i]; draw(); });
+    $("#allBusy").onclick = () => { m.fill(true); draw(); };
+    $("#allFree").onclick = () => { m.fill(false); draw(); };
+    $("#save").onclick = async () => {
+      const t = $("#toast");
+      try {
+        const r = await fetch(`api/availability?key=${encodeURIComponent(key)}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ unavailable: toTable() }) });
+        const j = await r.json(); if (!j.ok) throw new Error(j.error);
+        Object.keys(UNAVAILABLE).forEach(k => delete UNAVAILABLE[k]); Object.assign(UNAVAILABLE, toTable());
+        t.style.color = "var(--mint)"; t.textContent = "Saved. She'll see these next time she opens the link.";
+      } catch (e) { t.style.color = "var(--accent)"; t.textContent = "Not saved: " + e.message; }
+    };
+    $("#exit").onclick = e => { e.preventDefault(); Object.keys(UNAVAILABLE).forEach(k => delete UNAVAILABLE[k]); Object.assign(UNAVAILABLE, toTable()); location.hash = ""; app.classList.remove("admin"); go(0); };
+  }
+  draw();
+  if (key) loadResponses();
+}
+
+$("#fromName").textContent = CONFIG.myName;
+function boot() { if (location.hash === "#admin") admin(); else { $("#app").classList.remove("admin"); go(state.step); } }
+window.addEventListener("hashchange", boot);
+/* Load Nelvin's saved busy times from the server (falls back to UNAVAILABLE above). */
+fetch("api/availability").then(r => r.json()).then(j => {
+  if (j && j.unavailable) { Object.keys(UNAVAILABLE).forEach(k => delete UNAVAILABLE[k]); Object.assign(UNAVAILABLE, j.unavailable); }
+}).catch(() => {}).finally(boot);
+</script>
+</body>
+</html>
